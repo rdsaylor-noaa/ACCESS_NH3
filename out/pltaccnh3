@@ -1,0 +1,964 @@
+#!/usr/bin/env pythonw
+#                                                                                          !
+#     pltaccnh3 - Python GUI interface to generate plots of ACCESS_NH3 simulation results  !
+#                                                                                          !
+#==========================================================================================!
+#                                                                                          !
+import os
+import wx
+import subprocess
+from libaccess import genvar, metvar, canopy, pall1t, tseries
+
+# gets a list of the directories in "folder"
+# this is used to get the list of simulation experiments, so an assumption is that
+# the only directories in "folder" are simulation output directories
+def listdirs(folder):
+    return [d for d in os.listdir(folder) if os.path.isdir(os.path.join(folder, d))]
+
+# given the simulation name, extracts grid info
+# and returns domain height and canopy height
+def getGridInfo(simname):
+   gfname='./'+simname+'/grid/grid.dat'
+   gfh=open(gfname, 'r')
+   lines=gfh.readlines()
+   line=lines[1]
+   data=line.split()
+   hmax=float(data[4])
+   hc=float(data[5]) 
+   return hmax, hc
+
+# class definition for canopy plots
+class PltCanopy(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Canopy")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # plot surface, canopy or aerodynamic resistances 
+        #  or soil exchange velocity
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+#       hbox2 = wx.BoxSizer(wx.VERTICAL)
+        lbltype = wx.StaticText(self, size=(100,20), label="Type")
+        lbltype.SetFont(font)
+        hbox2.Add(lbltype,flag=wx.ALIGN_LEFT)
+        self.rbxtype1 = wx.RadioButton(self, -1, 'PPFD', style=wx.RB_GROUP)
+        self.rbxtype2 = wx.RadioButton(self, -1, 'NIR')
+        self.rbxtype3 = wx.RadioButton(self, -1, 'LW')
+        self.rbxtype4 = wx.RadioButton(self, -1, 'Rabs')
+        self.rbxtype5 = wx.RadioButton(self, -1, 'Tleaf')
+        self.rbxtype6 = wx.RadioButton(self, -1, 'gs')
+        self.rbxtype7 = wx.RadioButton(self, -1, 'Anet')
+        self.rbxtype8 = wx.RadioButton(self, -1, 'sun/shade')
+        hbox2.Add(self.rbxtype1, proportion=1)
+        hbox2.Add(self.rbxtype2, proportion=1)
+        hbox2.Add(self.rbxtype3, proportion=1)
+        hbox2.Add(self.rbxtype4, proportion=1)
+        hbox2.Add(self.rbxtype5, proportion=1)
+        hbox2.Add(self.rbxtype6, proportion=1)
+        hbox2.Add(self.rbxtype7, proportion=1)
+        hbox2.Add(self.rbxtype8, proportion=1)
+        vbox.Add(hbox2,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxtype1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        plttype = self.rbxtype1.GetValue()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        hmax, hc = getGridInfo(simname)
+
+        if (self.rbxtype1.GetValue() == True):
+           inthr=6
+           canopy.plotall3(simname, "ppfd", outtype, inthr, hmax, hc)
+        elif (self.rbxtype2.GetValue() == True):
+           inthr=6
+           canopy.plotall3(simname, "nir", outtype, inthr, hmax, hc)
+        elif (self.rbxtype3.GetValue() == True):
+           inthr=6
+           canopy.plotlw(simname, outtype, inthr, hmax, hc)
+        elif (self.rbxtype4.GetValue() == True):
+           inthr=6
+           canopy.plotall3(simname, "rabs", outtype, inthr, hmax, hc)
+        elif (self.rbxtype5.GetValue() == True):
+           inthr=6
+           canopy.plotall3(simname, "tl", outtype, inthr, hmax, hc)
+        elif (self.rbxtype6.GetValue() == True):
+           inthr=6
+           canopy.plotall3(simname, "gs", outtype, inthr, hmax, hc)
+        elif (self.rbxtype7.GetValue() == True):
+           inthr=6
+           canopy.plotall3(simname, "anet", outtype, inthr, hmax, hc)
+        elif (self.rbxtype8.GetValue() == True):
+           inthr=6
+           canopy.plotsun(simname, outtype, inthr, hmax, hc)
+
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# class definition for flux plots
+class PltFluxes(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Fluxes")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # integrated fluxes or profiles
+        hbox2 = wx.BoxSizer(wx.VERTICAL)
+        lbltype = wx.StaticText(self, size=(100,20), label="Type")
+        lbltype.SetFont(font)
+        hbox2.Add(lbltype,flag=wx.ALIGN_LEFT)
+        self.rbxtype1 = wx.RadioButton(self, -1, 'integrated', style=wx.RB_GROUP)
+        self.rbxtype2 = wx.RadioButton(self, -1, 'profiles')
+        hbox2.Add(self.rbxtype1, proportion=1)
+        hbox2.Add(self.rbxtype2, proportion=1)
+        vbox.Add(hbox2,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxtype1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        plttype = self.rbxtype1.GetValue()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        hmax, hc = getGridInfo(simname)
+
+        flxunits = "ng m$^{-2}$ s$^{-1}$"
+
+        if (plttype == True):
+           dirname = "cflux"
+           varnames = ["fnet", "flxg", "flxcs", "flxcw", "flxh"]
+           varlabels = ["Net", "Soil/Litter", "Stomatal", "Cuticular", "Total Canopy"]
+           varunits = flxunits
+           plttitle = "Fluxes"
+           scolors  = ["black", "peru", "royalblue", "red", "green"]
+           outfn = "iflx"
+           tseries.plottsm(simname, dirname, varnames, varlabels, varunits, plttitle, "line", scolors, outtype, outfn)
+        else:
+           inthr=6
+           dirnames = ["cflux", "cflux", "cflux"]
+           varnames = ["flxs", "flxw", "flxc"]
+           varunits = [flxunits, flxunits, flxunits]
+           vartitles = ["F$_s$", "F$_w$", "F$_c$"]
+           outfn = "cflx"
+           genvar.plotprofs3(simname, dirnames, varnames, varunits, vartitles, outtype, outfn, inthr, hc)
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# class definition for compensation point plots
+class PltGps(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Compensation Points")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # plot profiles or time series
+        hbox2 = wx.BoxSizer(wx.VERTICAL)
+        lbltype = wx.StaticText(self, size=(100,20), label="Type")
+        lbltype.SetFont(font)
+        hbox2.Add(lbltype,flag=wx.ALIGN_LEFT)
+        self.rbxtype1 = wx.RadioButton(self, -1, 'ground', style=wx.RB_GROUP)
+        self.rbxtype2 = wx.RadioButton(self, -1, 'profiles')
+        hbox2.Add(self.rbxtype1, proportion=1)
+        hbox2.Add(self.rbxtype2, proportion=1)
+        vbox.Add(hbox2,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxtype1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        plttype = self.rbxtype1.GetValue()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        hmax, hc = getGridInfo(simname)
+
+        if (plttype == True):
+           varnames  = ["gpg"]
+           varlabels = [""]
+           scolors   = ["brown"]   
+           outfn = "gpg"
+           tseries.plottsm(simname, "gp", varnames, varlabels, "$\mu$g m$^{-3}$", 
+               "Soil Compensation Point", "marker", scolors, outtype, outfn) 
+        else:
+           inthr=6
+           dirnames = ["gp", "gp"]
+           varnames = ["gp", "gpst"]
+           varunits = ["$\mu$g m$^{-3}$", "$\mu$g m$^{-3}$"]
+           vartitles = ["$\chi _c$", "$\chi _{st}$"]
+           outfn = "gpc"
+           genvar.plotprofs2(simname, dirnames, varnames, varunits, 
+               vartitles, outtype, outfn, inthr, hc)
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# class definition for resistance plots
+class PltResist(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Resistances")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # plot surface, canopy or aerodynamic resistances 
+        #  or soil exchange velocity
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltype = wx.StaticText(self, size=(100,20), label="Type")
+        lbltype.SetFont(font)
+        hbox2.Add(lbltype,flag=wx.ALIGN_LEFT)
+        self.rbxtype1 = wx.RadioButton(self, -1, 'surface', style=wx.RB_GROUP)
+        self.rbxtype2 = wx.RadioButton(self, -1, 'canopy')
+        self.rbxtype4 = wx.RadioButton(self, -1, 'Vs')
+        hbox2.Add(self.rbxtype1, proportion=1)
+        hbox2.Add(self.rbxtype2, proportion=1)
+        hbox2.Add(self.rbxtype4, proportion=1)
+        vbox.Add(hbox2,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxtype1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        plttype = self.rbxtype1.GetValue()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        hmax, hc = getGridInfo(simname)
+
+        runit = "s cm$^{-1}$"
+
+        if (self.rbxtype1.GetValue() == True):
+           varnames = ["rbg", "rsoil"]
+           varlabels = ["R$_{bg}$", "R$_{soil}$"]
+           scolors = ["royalblue", "gray"]
+           outfn = "rsurf"
+           tseries.plottsm(simname, "r", varnames, varlabels, runit, 
+               "Resistances", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype2.GetValue() == True):
+           inthr=6
+           dirnames = ["r", "r", "r"]
+           varnames = ["rb", "rs", "rw"]
+           varunits = [runit, runit, runit]
+           vartitles = ["R$_b$", "R$_s$", "R$_w$"]
+           outfn = "rcnpy"
+           genvar.plotprofs3(simname, dirnames, varnames, varunits, vartitles, outtype, outfn, inthr, hc)
+        else:
+           varnames = ["vs"]
+           varlabels = [""]
+           scolors = ["darkgreen"]
+           outfn = "vs"
+           tseries.plottsm(simname, "vs", varnames, varlabels, "cm s$^{-1}$", 
+               "Surface Exchange Velocity", "marker", scolors, outtype, outfn) 
+
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# class definition for concentration profile plots
+class PltConc(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Concentration Profiles")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        inthr=6
+        hmax, hc = getGridInfo(simname)
+        outfn = "sp"
+        genvar.plotprofs1(simname, "sp", "sp", "$\mu$g m$^{-3}$", 
+            "NH$_3$ Canopy Profile", outtype, outfn, inthr, hmax)
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# class definition for source profile plots
+class PltSource(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Source Profiles")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        inthr=6
+        hmax, hc = getGridInfo(simname)
+        outfn = "src"
+        genvar.plotprofs1(simname, "s", "s", "ng m$^{-3}$ s$^{-1}$", 
+            "NH$_3$ Canopy Source Profile", outtype, outfn, inthr, hc)
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# class definition for Vd profile plots
+class PltVd(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Vd Profiles")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        inthr=6
+        hmax, hc = getGridInfo(simname)
+        outfn = "vd"
+        genvar.plotprofs1(simname, "vd", "vd", "cm s$^{-1}$", 
+            "v$_d$ Canopy Profile", outtype, outfn, inthr, hc)
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# class definition for met profile plots
+class PltMet(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Met Profiles")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # enter met variable to plot
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+#       hbox2 = wx.BoxSizer(wx.VERTICAL)
+        lbltype = wx.StaticText(self, size=(100,20), label="Variable")
+        lbltype.SetFont(font)
+        hbox2.Add(lbltype,flag=wx.ALIGN_LEFT)
+        vbox.Add(hbox2,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
+        self.rbxtype1 = wx.RadioButton(self, -1, 'cair', style=wx.RB_GROUP)
+        self.rbxtype3 = wx.RadioButton(self, -1, 'h2o')
+        self.rbxtype4 = wx.RadioButton(self, -1, 'qh')
+        self.rbxtype6 = wx.RadioButton(self, -1, 'pmb')
+        self.rbxtype8 = wx.RadioButton(self, -1, 'tk')
+        self.rbxtype9 = wx.RadioButton(self, -1, 'ubar')
+        self.rbxtypekv = wx.RadioButton(self, -1, 'kv')
+        self.rbxtype10 = wx.RadioButton(self, -1, '(z-d)/L')
+        self.rbxtype11 = wx.RadioButton(self, -1, 'Ra')
+        self.rbxtype12 = wx.RadioButton(self, -1, 'gaero')
+        hbox3.Add(self.rbxtype1, proportion=1)
+        hbox3.Add(self.rbxtype3, proportion=1)
+        hbox3.Add(self.rbxtype4, proportion=1)
+        hbox3.Add(self.rbxtype6, proportion=1)
+        hbox3.Add(self.rbxtype8, proportion=1)
+        hbox3.Add(self.rbxtype9, proportion=1)
+        hbox3.Add(self.rbxtypekv, proportion=1)
+        hbox3.Add(self.rbxtype10, proportion=1)
+        hbox3.Add(self.rbxtype11, proportion=1)
+        hbox3.Add(self.rbxtype12, proportion=1)
+      
+        vbox.Add(hbox3,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxtype1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rbxout3.GetValue() == True):
+           outtype = 'png'
+
+        inthr=6
+        hmax, hc = getGridInfo(simname)
+
+        if (self.rbxtype1.GetValue() == True):
+           metvar.plotprofs(simname, "cair", outtype, inthr, hmax, hc)
+        elif (self.rbxtype3.GetValue() == True):
+           metvar.plotprofs(simname, "h2o", outtype, inthr, hmax, hc)
+        elif (self.rbxtype4.GetValue() == True):
+           metvar.plotprofs(simname, "qh", outtype, inthr, hmax, hc)
+        elif (self.rbxtype6.GetValue() == True):
+           metvar.plotprofs(simname, "pmb", outtype, inthr, hmax, hc)
+        elif (self.rbxtype8.GetValue() == True):
+           metvar.plotprofs(simname, "tk", outtype, inthr, hmax, hc)
+        elif (self.rbxtype9.GetValue() == True):
+           metvar.plotprofs(simname, "ubar", outtype, inthr, hmax, hc)
+        elif (self.rbxtypekv.GetValue() == True):
+           metvar.plotprofs(simname, "kv", outtype, inthr, hmax, hc)
+        elif (self.rbxtype10.GetValue() == True):
+           varnames = ["zol"]
+           varlabels = [""]
+           scolors = ["peru"] 
+           outfn = "zol"
+           tseries.plottsm(simname, "met", varnames, varlabels, "", 
+               "Monin-Obukhov Stability - (z-d)/L", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype11.GetValue() == True):
+           varnames = ["ra"]
+           varlabels = [""]
+           scolors = ["peru"] 
+           outfn = "ra"
+           tseries.plottsm(simname, "met", varnames, varlabels, "s cm$^{-1}$", 
+               "Aerodynamic Resistance - Ra", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype12.GetValue() == True):
+           varnames = ["gaero"]
+           varlabels = [""]
+           scolors = ["peru"] 
+           outfn = "gaero"
+           tseries.plottsm(simname, "met", varnames, varlabels, "mol m$^{-2}$ s$^{-1}$", 
+               "Aerodynamic Conductance", "marker", scolors, outtype, outfn)
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
+# main
+if __name__ == "__main__":
+    app = wx.App()
+    frame = wx.Frame(None, title='PltACCNH3', size=(700, 380))
+    nb = wx.Notebook(frame)
+
+    # separate pages for each type of plot
+    # each accessed by a Tab in the Notebook
+    # Each class is defined above
+    nb.AddPage(PltFluxes(nb), "Fluxes")
+    nb.AddPage(PltGps(nb), "CompPts")
+    nb.AddPage(PltResist(nb), "Resistances")
+    nb.AddPage(PltConc(nb), "ConcProfs")
+    nb.AddPage(PltSource(nb), "SrcProfs")
+    nb.AddPage(PltVd(nb), "VdProfs")
+    nb.AddPage(PltCanopy(nb), "Canopy")
+    nb.AddPage(PltMet(nb), "MetProfs")
+
+    frame.Centre()
+    frame.Show()
+    app.MainLoop()

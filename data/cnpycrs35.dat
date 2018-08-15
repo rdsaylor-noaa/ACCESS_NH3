@@ -1,0 +1,110 @@
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
+#
+#   Canopy Morphology Data for
+#   Atmospheric Chemistry and Canopy Exchange Simulation System - NH3 (ACCESS_NH3)
+#
+#   x          - leaf angle distribution parameter in ellipsoidal kb function
+#   kd         - diffuse radiation extinction coefficient
+#   g0         - Medlyn et al. stomatal conductance parameter
+#   g1         - Medlyn et al. stomatal conductance parameter
+#   dleaf      - characteristic leaf dimension (m)
+#   lad - layer leaf area density (cm2/cm3)
+#
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
+# New Coweeta canopy
+# Self-documenting section for grid consistency
+87      	 npts          INTEGER      number of vertical layers
+0.0     	 z0            REAL         column bottom (cm)
+4300.0  	 zi            REAL         column top (cm)
+35.00   	 hc            REAL         canopy height (m)
+1.00000 	 alfa          REAL         stretched grid parameter ()
+#
+# x - leaf angle distribution parameter
+ 1.00  
+#
+# kd - diffuse radiation extinction coefficient
+ 0.60  
+#
+# g0 - Medlyn et al. stomatal conductance parameter
+ 0.02  
+#
+# g1 - Medlyn et al. stomatal conductance parameter
+ 4.00  
+#
+# dleaf - characteristic leaf dimension (m)
+ 0.06  
+#
+#     lad
+#    (cm2/cm3) top-->bottom
+ 0.000000E+00
+ 1.359549E-04
+ 2.719098E-04
+ 4.078648E-04
+ 5.438197E-04
+ 6.797746E-04
+ 8.157295E-04
+ 9.832069E-04
+ 1.164194E-03
+ 1.345181E-03
+ 1.526168E-03
+ 1.707155E-03
+ 1.888142E-03
+ 2.069129E-03
+ 2.250116E-03
+ 2.431103E-03
+ 2.612090E-03
+ 2.521782E-03
+ 2.315205E-03
+ 2.108628E-03
+ 1.902051E-03
+ 1.695474E-03
+ 1.488897E-03
+ 1.282320E-03
+ 1.139984E-03
+ 1.147542E-03
+ 1.155100E-03
+ 1.162658E-03
+ 1.170215E-03
+ 1.177773E-03
+ 1.185331E-03
+ 1.192889E-03
+ 1.497305E-03
+ 1.801721E-03
+ 2.106137E-03
+ 2.410553E-03
+ 2.714969E-03
+ 3.019385E-03
+ 3.323801E-03
+ 3.157295E-03
+ 2.788965E-03
+ 2.420635E-03
+ 2.052304E-03
+ 1.683974E-03
+ 1.315644E-03
+ 9.473137E-04
+ 7.524962E-04
+ 8.179478E-04
+ 8.833995E-04
+ 9.488511E-04
+ 1.014303E-03
+ 1.079754E-03
+ 1.145206E-03
+ 1.196914E-03
+ 1.124924E-03
+ 1.052934E-03
+ 9.809444E-04
+ 9.089547E-04
+ 8.369650E-04
+ 7.649753E-04
+ 6.929856E-04
+ 6.209959E-04
+ 5.490062E-04
+ 4.777640E-04
+ 4.095120E-04
+ 3.412600E-04
+ 2.730080E-04
+ 2.047560E-04
+ 1.365040E-04
+ 6.825201E-05
+ 0.000000E+00
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!

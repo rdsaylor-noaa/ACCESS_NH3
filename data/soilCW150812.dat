@@ -1,0 +1,31 @@
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
+#
+#   Soil Data
+#   Atmospheric Chemistry and Canopy Exchange Simulation System - Ammonia (ACCESS_NH3)
+#
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
+# Coweeta soil - August 12-14, 2015
+#
+# soil type
+#  1 - sand
+#  2 - loamy sand
+#  3 - sandy loam
+#  4 - loam
+#  5 - silt loam
+#  6 - sandy clay loam
+#  7 - clay loam
+#  8 - silty clay loam
+#  9 - sandy clay
+# 10 - silty clay
+# 11 - clay
+# isoiltype - INTEGER
+ 3
+#
+# stheta - volumetric soil water content (m3/m3)
+# REAL
+ 0.1909
+#
+# dsoil - depth of topsoil (cm)
+# REAL
+ 25.0
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!

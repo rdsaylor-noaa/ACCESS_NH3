@@ -1,0 +1,95 @@
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
+#
+#   Emission potentials [NH4+]/[H+] for soil and canopy
+#   Atmospheric Chemistry and Canopy Exchange Simulation System - Ammonia (ACCESS_NH3)
+#
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
+# Coweeta forest canopy
+# Self-documenting section for mechanism and grid consistency
+nh3                gasmech        CHARACTER   gas-phase mechanism           [16 chars max]
+87                 npts           INTEGER     number of vertical layers     [1-?] 
+0.0                z0             REAL        column bottom (cm)            [0.0-?]
+35.0               hc             REAL        canopy height (m)             [?]
+4300.0             zi             REAL        column top (cm)               [?]
+#
+# soil NH3 emission potential
+# value (molar ratio)
+# REAL
+ 2.0000E+02
+#
+# stomatal NH3 emission potential
+# value (molar ratio)
+# REAL
+# canopy only, top-->bottom
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+ 4.000E+01
+#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
