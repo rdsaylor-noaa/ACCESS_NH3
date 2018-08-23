@@ -249,6 +249,9 @@ subroutine InitializeModel()
   ! read canopy morphology data
   call GetCanopyData()
 
+  ! read soil data file
+  call GetSoilData()
+
   ! set initial conditions
   call SetInitialConditions()
 
@@ -257,9 +260,6 @@ subroutine InitializeModel()
 
   ! read emission potentials file
   call GetEmisPotentialsData()
-
-  ! read soil data file
-  call GetSoilData()
 
   if (ADVECTION .eqv. .TRUE.) then
     ! read advected background concentration file
