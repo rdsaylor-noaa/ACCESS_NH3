@@ -8,7 +8,7 @@ LFLAGS=
 
 # create executable
 access: GlobalData.o EnvironData.o PhysChemData.o Output.o Utils.o Initialize.o Emissions.o CanopyPhysics.o DryDep.o GasChem.o Chem.o DVODE_f90_m.o Integrate.o VertTransport.o Main.o 
-	 $(FC) -o ../bin/access $(LFLAGS) GlobalData.o EnvironData.o PhysChemData.o Output.o Utils.o Initialize.o Emissions.o CanopyPhysics.o DryDep.o GasChem.o Chem.o DVODE_f90_m.o Integrate.o VertTransport.o Main.o
+	 $(FC) -o ../access $(LFLAGS) GlobalData.o EnvironData.o PhysChemData.o Output.o Utils.o Initialize.o Emissions.o CanopyPhysics.o DryDep.o GasChem.o Chem.o DVODE_f90_m.o Integrate.o VertTransport.o Main.o
 
 # compilation dependencies
 
@@ -61,4 +61,4 @@ clean:
 	rm -f -r *.o *.mod 
 
 veryclean:
-	rm -f -r *.o *.mod ../bin/access 
+	rm -f -r *.o *.mod ../access 
