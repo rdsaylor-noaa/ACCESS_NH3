@@ -426,12 +426,15 @@ function RelativeHumidity(tki, pmbi, qhi)
   real(kind=dp), intent(in) :: pmbi
   real(kind=dp), intent(in) :: qhi
   real(kind=dp)             :: RelativeHumidity
-  real(kind=dp)             :: e, es, qhd, pkpa
+  real(kind=dp)             :: e, es, qhd, pkpa, rhi
+  real(kind=dp), parameter  :: rhmin=0.1
+  real(kind=dp), parameter  :: rhmax=99.0
   qhd=0.001*qhi
   pkpa=0.1*pmbi
   e = pkpa*qhd/(0.622+qhd)
   es = esat(tki)
-  RelativeHumidity = 100.0*e/es
+  rhi = max(rhmin, min(rhmax, 100.0*e/es))   ! bound RH to (rhmin, rhmax)
+  RelativeHumidity = rhi
   return 
 end function RelativeHumidity
 
