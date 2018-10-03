@@ -181,6 +181,7 @@ subroutine SaveResults()
     ppfdout(i,nt)  = ppfd(i)
     cairout(i,nt)  = cair(i)
     h2oout(i,nt)   = h2o(i) 
+    rhout(i,nt)    = RelativeHumidity(tk(i), pmb(i), qh(i))
 
     ! canopy physics data
     ppfdsunout(i,nt) = ppfd_sun(i)
@@ -577,6 +578,15 @@ subroutine PrintFinaltoFile()
   write(UOUT,fmt=f1) col1,(timeout(m),m=0,ntout)
   do i=1,npts
     write(UOUT,fmt=f2) 0.01*z(i),(h2oout(i,m),m=0,ntout)
+  end do
+  close(UOUT)
+
+  ! output relative humidity profiles over simulation
+  ofname='./out/' // trim(simname) // '/met/rh.dat'
+  open(UOUT,file=ofname)
+  write(UOUT,fmt=f1) col1,(timeout(m),m=0,ntout)
+  do i=1,npts
+    write(UOUT,fmt=f2) 0.01*z(i),(rhout(i,m),m=0,ntout)
   end do
   close(UOUT)
 

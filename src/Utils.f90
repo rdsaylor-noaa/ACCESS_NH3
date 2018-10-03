@@ -122,6 +122,7 @@ subroutine CleanUp()
   deallocate(fjout)
   deallocate(cairout)
   deallocate(h2oout)
+  deallocate(rhout)
 
   deallocate(qout)
   deallocate(vfout)

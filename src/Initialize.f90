@@ -142,6 +142,7 @@ subroutine InitializeModel()
   allocate(fjout(npts,0:ntout))
   allocate(cairout(npts,0:ntout))
   allocate(h2oout(npts,0:ntout))
+  allocate(rhout(npts,0:ntout))
 
   allocate(qout(npts,ninteg,0:ntout))
   allocate(vfout(npts,ninteg,0:ntout))
@@ -219,6 +220,7 @@ subroutine InitializeModel()
   fjout=0.0_dp
   cairout=0.0_dp
   h2oout=0.0_dp
+  rhout=0.0_dp
   ppfdsunout=0.0_dp
   ppfdshdout=0.0_dp
   nirsunout=0.0_dp

@@ -442,6 +442,8 @@ module GlobalData
   real(kind=dp), allocatable :: pmbout(:,:)
   ! qhout - saved specific humidity profiles (g/kg)
   real(kind=dp), allocatable :: qhout(:,:)
+  ! rhout - saved relative humidity profiles (%)
+  real(kind=dp), allocatable :: rhout(:,:)
   ! ubarout - saved mean wind speed profiles (cm/s)
   real(kind=dp), allocatable :: ubarout(:,:)
   ! kvout - saved eddy diffusivity profiles (cm2/s)
