@@ -833,7 +833,7 @@ class PltMet(wx.Panel):
 
         hbox3 = wx.BoxSizer(wx.HORIZONTAL)
         self.rbxtype1 = wx.RadioButton(self, -1, 'cair', style=wx.RB_GROUP)
-        self.rbxtype3 = wx.RadioButton(self, -1, 'h2o')
+        self.rbxtype3 = wx.RadioButton(self, -1, 'rh')
         self.rbxtype4 = wx.RadioButton(self, -1, 'qh')
         self.rbxtype6 = wx.RadioButton(self, -1, 'pmb')
         self.rbxtype8 = wx.RadioButton(self, -1, 'tk')
@@ -905,7 +905,7 @@ class PltMet(wx.Panel):
         if (self.rbxtype1.GetValue() == True):
            metvar.plotprofs(simname, "cair", outtype, inthr, hmax, hc)
         elif (self.rbxtype3.GetValue() == True):
-           metvar.plotprofs(simname, "h2o", outtype, inthr, hmax, hc)
+           metvar.plotprofs(simname, "rh", outtype, inthr, hmax, hc)
         elif (self.rbxtype4.GetValue() == True):
            metvar.plotprofs(simname, "qh", outtype, inthr, hmax, hc)
         elif (self.rbxtype6.GetValue() == True):
