@@ -669,7 +669,9 @@ function NetPhoto(tleaf, cci, ppfd)
   real(kind=dp)              :: kc               ! Michaelis constant for CO2, umol/mol
   real(kind=dp)              :: k0               ! inhibition constant for O2, umol/mol
   real(kind=dp), parameter   :: tau25=2600.      ! CO2/O2 specificity ratio @ 25degC, mmol/mmol
-  real(kind=dp), parameter   :: vm25=100.0       ! max Rubisco capacity per unit leaf area @25degC, umol/m2-s
+  real(kind=dp), parameter   :: vm25=54.0        ! max Rubisco capacity per unit leaf area @25degC, umol/m2-s
+                                                 ! from: Houborg et al. (2009) Ag. & Forest Met., 149, 1875-1895.
+                                                 !        Temperate deciduous forest
   real(kind=dp), parameter   :: kc25=300.        ! Michaelis constant for CO2 @ 25degC, umol/mol
   real(kind=dp), parameter   :: k025=300000.     ! inhibition constant for O2 @ 25degC, umol/mol
   real(kind=dp), parameter   :: coa=210000.      ! oxygen mole fraction, umol/mol          
