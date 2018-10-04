@@ -985,7 +985,7 @@ class PltSoil(wx.Panel):
         hbox2.Add(lbltype,flag=wx.ALIGN_LEFT)
         vbox.Add(hbox2,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
 
-        hbox3 = wx.BoxSizer(wx.VERTICAL)
+        hbox3 = wx.BoxSizer(wx.HORIZONTAL)
         self.rbxtype1 = wx.RadioButton(self, -1, 'vsh2o', style=wx.RB_GROUP)
         self.rbxtype2 = wx.RadioButton(self, -1, 'qsoil')
         self.rbxtype3 = wx.RadioButton(self, -1, 'effrh')
