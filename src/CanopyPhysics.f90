@@ -298,9 +298,10 @@ end function CanopyPhysConverged
 !**********************************************************************************************************************!
 ! subroutine CalcSoilExchangeParams - calculations parameters for exchange of water vapor with soil surface
 !
-! Uses formulation of ...
-!    Pleim et al. (2013) JGR, 118, 3794-3806.
+! Uses formulation as derived from ...
+!    Sakaguchi & Zeng (2009) JGR, D01107, doi:10.1029/2008JD010834.
 !    Schuepp (1977) BLM, 12, 171-186.
+!    Philip (1957) J. of Met., 14, 354-366.
 !
 ! With data from ...
 !    Rawls et al. (1982) Trans. ASAE, 25, 1316-1320.
@@ -310,7 +311,6 @@ end function CanopyPhysConverged
 subroutine CalcSoilExchangeParams()
   real(kind=dp)              :: fsat           ! fractional soil saturation
   real(kind=dp)              :: mdiff          ! molecular diffusivity of water vapor (cm2/s)
-  real(kind=dp), parameter   :: viscair=0.155  ! dynamic viscosity of air (cm2/s)
   real(kind=dp)              :: phi            ! tmp variable for soil matric potential (suction)
 
   ! soil thermal conductivity
@@ -319,15 +319,15 @@ subroutine CalcSoilExchangeParams()
 
   ! surface molar water vapor concentration (moles/cm3)
   phi = SoilMatricPotential(stheta)
-  qsoil = SoilAlpha(phi, tsoilk)*qsat(tsoilk)
+  effrhsoil = SoilAlpha(phi, tsoilk)
+  qsoil = effrhsoil*qsat(tsoilk)
 
   ! ground boundary layer resistance (s/cm)
   rbg = SoilRbg(ubar(1))
 
   ! Note:  These are the correct units needed in SurfaceAirTemp!
-  ! ground aerodynamic conductance (mol/m2-s) as in Bonan (2016)
-  ! gaero is calculated in EnvironData
-  gbg = gaero(nt)
+  !         mol/m2-s
+  gbg = rtog(rbg*100., pmb(1), tk(1))    ! convert resistance to conductance
 
   ! soil diffusion resistance (s/cm)
   mdiff = mdiffh2o(tsoilk, pmb(1))
