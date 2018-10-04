@@ -323,7 +323,7 @@ subroutine CalcSoilExchangeParams()
   qsoil = effrhsoil*qsat(tsoilk)
 
   ! ground boundary layer resistance (s/cm)
-  rbg = SoilRbg(ubar(1))
+  rbg = SoilRbg(ubar(ncnpy+1))
 
   ! Note:  These are the correct units needed in SurfaceAirTemp!
   !         mol/m2-s
