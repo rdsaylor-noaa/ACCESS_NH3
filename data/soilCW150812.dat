@@ -19,7 +19,7 @@
 # 10 - silty clay
 # 11 - clay
 # isoiltype - INTEGER
- 3
+ 6
 #
 # stheta - volumetric soil water content (m3/m3)
 # REAL
@@ -27,5 +27,5 @@
 #
 # dsoil - depth of topsoil (cm)
 # REAL
- 25.0
+ 203.0
 #########!#########!#########!#########!#########!#########!#########!#########!#########!#########!#########!
