@@ -225,6 +225,8 @@ subroutine SaveResults()
   rbgout(nt) = rbg
   gbgout(nt) = gbg
   rsoilout(nt) = rsoil
+  tsoilkout(nt) = tsoilk
+  tk0out(nt) = tk0
 
   call CalculateVertFluxes()
   call IntegrateCanopyFluxes()

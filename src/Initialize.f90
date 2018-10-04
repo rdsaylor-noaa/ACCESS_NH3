@@ -182,12 +182,14 @@ subroutine InitializeModel()
   allocate(anetshdout(npts,0:ntout))
   allocate(anetwgtout(npts,0:ntout))
 
-  allocate(vsh2oout(npts,0:ntout))
-  allocate(qsoilout(npts,0:ntout))
-  allocate(effrhsoilout(npts,0:ntout))
-  allocate(rbgout(npts,0:ntout))
-  allocate(gbgout(npts,0:ntout))
-  allocate(rsoilout(npts,0:ntout))
+  allocate(vsh2oout(0:ntout))
+  allocate(qsoilout(0:ntout))
+  allocate(effrhsoilout(0:ntout))
+  allocate(rbgout(0:ntout))
+  allocate(gbgout(0:ntout))
+  allocate(rsoilout(0:ntout))
+  allocate(tsoilkout(0:ntout))
+  allocate(tk0out(0:ntout))
 
   allocate(timeout(0:ntout))
   allocate(sdtout(0:ntout))
@@ -254,6 +256,8 @@ subroutine InitializeModel()
   rbgout=0.0_dp
   gbgout=0.0_dp
   rsoilout=0.0_dp
+  tsoilkout=0.0_dp
+  tk0out=0.0_dp
 
   ! set all physical-chemical data
   call SetPhysChemData()

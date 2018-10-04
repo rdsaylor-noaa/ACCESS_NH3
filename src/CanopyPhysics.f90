@@ -208,7 +208,6 @@ subroutine IntegrateTempAir(tin, tout)
   real(kind=dp), intent(in) :: tin, tout
   real(kind=dp)             :: ts         ! current integration time [tin, tout]                  
   real(kind=dp)             :: dtphys     ! integration time step (sec)
-  real(kind=dp)             :: tk0        ! lower boundary condition for Tair derived from surface energy balance (K)
   real(kind=dp)             :: rcp        ! rho*cpair (moles/m3)*(J/mole-K)
   real(kind=dp), dimension(npts) :: phitk    ! new solution array
   real(kind=dp), dimension(npts) :: phitkp   ! previous solution array
@@ -219,7 +218,7 @@ subroutine IntegrateTempAir(tin, tout)
   ts = tin
   dtphys = 1.0_dp
 
-  tk0 = SurfaceAirTemp()
+  tk0 = SurfaceAirTemp()   ! lower boundary condition for Tair derived from surface energy balance
 
   ! integration over tin -> tout
   do
@@ -312,6 +311,7 @@ subroutine CalcSoilExchangeParams()
   real(kind=dp)              :: fsat           ! fractional soil saturation
   real(kind=dp)              :: mdiff          ! molecular diffusivity of water vapor (cm2/s)
   real(kind=dp)              :: phi            ! tmp variable for soil matric potential (suction)
+  integer(kind=i4)           :: rbgselect      ! option for calculation of rbg
 
   ! soil thermal conductivity
   fsat = (stheta-rtheta)/(sattheta-rtheta)
@@ -323,7 +323,12 @@ subroutine CalcSoilExchangeParams()
   qsoil = effrhsoil*qsat(tsoilk)
 
   ! ground boundary layer resistance (s/cm)
-  rbg = SoilRbg(ubar(ncnpy+1))
+  rbgselect = 2
+  if (rbgselect == 1) then
+    rbg = SoilRbg(ubar(ncnpy+1))                 ! Schuepp (1977)
+  else
+    rbg = gtor(gaero(nt), pmb(1), tk(1))*0.01    ! Bonan (2016)
+  end if
 
   ! Note:  These are the correct units needed in SurfaceAirTemp!
   !         mol/m2-s

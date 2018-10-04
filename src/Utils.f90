@@ -178,6 +178,8 @@ subroutine CleanUp()
   deallocate(gbgout)
   deallocate(rsoilout)
   deallocate(qsoilout)
+  deallocate(tsoilkout)
+  deallocate(tk0out)
 
   ! close metfile
   close(UENV)
