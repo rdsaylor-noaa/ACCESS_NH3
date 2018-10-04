@@ -111,8 +111,7 @@ subroutine InitializeModel()
   allocate(rbout(npts,ninteg,0:ntout))
   allocate(rsout(npts,ninteg,0:ntout))
   allocate(rwout(npts,ninteg,0:ntout))
-  allocate(rbgout(ninteg,0:ntout))
-  allocate(rsoilout(ninteg,0:ntout))
+  allocate(rsoillout(ninteg,0:ntout))
   allocate(flxs(npts,ninteg,0:ntout))
   allocate(flxw(npts,ninteg,0:ntout))
   allocate(flxc(npts,ninteg,0:ntout))
@@ -209,8 +208,7 @@ subroutine InitializeModel()
   rbout=0.0_dp
   rsout=0.0_dp
   rwout=0.0_dp
-  rbgout=0.0_dp
-  rsoilout=0.0_dp
+  rsoillout=0.0_dp
   flxs=0.0_dp
   flxw=0.0_dp
   flxc=0.0_dp

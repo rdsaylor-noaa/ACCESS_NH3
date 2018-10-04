@@ -316,9 +316,11 @@ module GlobalData
   real(kind=dp)                    :: effrhsoil
 
   ! rbg - ground boundary layer resistance (s/cm)
-  real(kind=dp), dimension(ninteg) :: rbg
-  ! rsoil - resistance to diffusion thru soil pore space (s/cm)
-  real(kind=dp), dimension(ninteg) :: rsoil
+  real(kind=dp)                    :: rbg
+  ! rsoil - resistance to diffusion of water vapor thru soil pore space (s/cm)
+  real(kind=dp)                    :: rsoil
+  ! rsoill - resistance to diffusion thru soil pore space for chemical species (s/cm)
+  real(kind=dp), dimension(ninteg) :: rsoill
   ! gammaso - soil emission potential (molar ratio) = [NH4+]/[H+] for ammonia
   real(kind=dp), dimension(ninteg) :: gammaso
 
@@ -350,7 +352,7 @@ module GlobalData
   real(kind=dp), allocatable     :: rbgout(:)
   ! gbgout - ground aerodynamic conductance (mol/m2-s)
   real(kind=dp), allocatable     :: gbgout(:)
-  ! rsoilout - resistance to diffusion through soil pore space (s/cm)
+  ! rsoilout - resistance to diffusion of water vapor through soil pore space (s/cm)
   real(kind=dp), allocatable     :: rsoilout(:)
   ! tsoilkout - soil temperature over simulation (K)
   real(kind=dp), allocatable     :: tsoilkout(:)
@@ -439,10 +441,8 @@ module GlobalData
   real(kind=dp), allocatable :: rsout(:,:,:)  
   ! rwout - saved cuticular resistance (s/cm)
   real(kind=dp), allocatable :: rwout(:,:,:)  
-  ! rbgout - saved ground boundary layer resistance (s/cm)
-  real(kind=dp), allocatable :: rbgout(:,:)
-  ! rsoilout - saved soil resistance (s/cm)
-  real(kind=dp), allocatable :: rsoilout(:,:)
+  ! rsoillout - saved soil resistance (s/cm)
+  real(kind=dp), allocatable :: rsoillout(:,:)
   ! flxs - stomatal flux (molecules/cm2-s)
   real(kind=dp), allocatable :: flxs(:,:,:)
   ! flxw - cuticular flux (molecules/cm2-s)

@@ -158,8 +158,7 @@ subroutine IntegrateVertExchange(tstart, dtstep)
 
     ! save vs, csoil, rbg and rsoil
     vsout(l,nt) = vs(l)
-    rbgout(l,nt) = rbg(l)
-    rsoilout(l,nt) = rsoil(l)
+    rsoillout(l,nt) = rsoill(l)
     gpgout(l,nt) = csoil(l)
 
     ! fill local species arrays for species l

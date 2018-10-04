@@ -106,9 +106,10 @@ end subroutine GetDryDepExCoeffs
 ! subroutine GetSoilDryDepExCoeffs - calculate dry deposition velocities for
 !                                    deposition to the ground surface
 !
-! Uses formulation of ...
-!    Pleim et al. (2013) JGR, 118, 3794-3806.
+! Uses formulation as derived from ...
+!    Sakaguchi & Zeng (2009) JGR, D01107, doi: 10.1029/2008JD010834.
 !    Schuepp (1977) BLM, 12, 171-186.
+!    Philip (1957) J. of Met., 14, 354-366.
 !
 ! With data from ...
 !    Rawls et al. (1982) Trans. ASAE, 25, 1316-1320.
@@ -117,34 +118,23 @@ end subroutine GetDryDepExCoeffs
 !**********************************************************************************************************************!
 subroutine GetSoilDryDepExCoeffs()
   integer(kind=i4)          :: l
-  real(kind=dp)             :: tks            ! soil temperature (K)
   real(kind=dp)             :: mdiffl         ! molecular diffusivity (cm2/s)
-  real(kind=dp), parameter  :: viscair=0.155  ! dynamic viscosity of air (cm2/s)
-  real(kind=dp)             :: ugstar, del0 
-  real(kind=dp)             :: ldry, mdiffp, xe
-
-  tks = tk(1)  ! for now, maybe better later?
 
   ! soil exchange coeffs and soil compensation points
   do l=1,ninteg
 
-    ! ground boundary layer resistance (s/cm)
-    mdiffl=MolecDiff(l, tks, pmb(1))
-    ugstar = 0.05*ubar(ncnpy+1)+0.00005*ubar(ncnpy+1)*ubar(ncnpy+1) 
-    del0 = viscair/(0.4*ugstar)
-    rbg(l) = ((viscair/mdiffl)-dlog(del0/10.0))/(0.4*ugstar)
+    ! ground boundary layer resistance (Rbg, s/cm) calculated in CanopyPhysics
+    ! and assumed to be invariant over species
 
     ! soil diffusion resistance (s/cm)
-    xe =(1.0-(stheta/sattheta))**5.0
-    ldry = dsoil*(dexp(xe)-1.0)/1.7183
-    mdiffp = mdiffl*sattheta*sattheta*(1.0-(rtheta/sattheta))**(2.0+3.0/sbcoef)
-    rsoil(l) = ldry/mdiffp
+    mdiffl=MolecDiff(l, tsoilk, pmb(1))
+    rsoill(l) = SoilResist(mdiffl)
 
     ! deposition velocity to ground surface (cm/s)
-    vs(l)=1.0/(rbg(l)+rsoil(l))       
+    vs(l)=1.0/(rbg+rsoill(l))       
 
     ! soil compensation point (molecules/cm3)
-    csoil(l) = 161500.0_dp*dexp(-10380.0_dp/tks)*gammaso(l)*navo/(tks*1000.0_dp) 
+    csoil(l) = 161500.0_dp*dexp(-10380.0_dp/tsoilk)*gammaso(l)*navo/(tsoilk*1000.0_dp) 
   end do
 
   return

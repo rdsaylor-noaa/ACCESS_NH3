@@ -49,7 +49,7 @@ module CanopyPhysics
           gs_medlyn, NetPhoto, kbe
   public CalcCanopyPhysics, PartitionRAD, CalcRadProfiles, CalcWeightedProfiles, &
          SoilMatricPotential, SoilAlpha, SoilRbg, SoilResist, &
-         rbgl, rsoill, rbl, rw_massad, rw_flechard, rs_zhang_nh3, rs_zhang, rs_rds, &
+         rbl, rw_massad, rw_flechard, rs_zhang_nh3, rs_zhang, rs_rds, &
          rs_jarvis1, rs_jarvis2, rs_jim, rs_nmj, rincl, gpl, gpstl, gpgl
 
 contains
@@ -1150,61 +1150,6 @@ subroutine CalcWeightedProfiles()
 
   return
 end subroutine CalcWeightedProfiles
-
-!**********************************************************************************************************************!
-! function rbgl - calculate surface boundary layer resistance
-!
-! Uses formulation of ...
-!    Schuepp (1977) BLM, 12, 171-186.
-!
-!**********************************************************************************************************************!
-function rbgl(mdiffl, ubarh)
-  real(kind=dp)             :: rbgl           ! surface boundary layer resistance
-                                              ! (s/cm)
-  real(kind=dp), intent(in) :: mdiffl         ! molecular diffusivity of species 
-                                              ! in air (cm2/s)
-  real(kind=dp), intent(in) :: ubarh          ! mean wind speed at canopy top
-                                              ! (cm/s)
-  real(kind=dp), parameter  :: viscair=0.155  ! dynamic viscosity of air (cm2/s)
-  real(kind=dp)             :: ugstar, del0 
-
-  ugstar = 0.05*ubarh+0.00005*ubarh*ubarh 
-  del0 = viscair/(0.4*ugstar)
-  rbgl = ((viscair/mdiffl)-dlog(del0/10.0))/(0.4*ugstar)
-  !print *, 'ubarh, mdiffl, rbgl=', ubarh, mdiffl, rbgl
-  return
-end function rbgl
-
-!**********************************************************************************************************************!
-! function rsoill - calculate resistance to diffusion through the soil
-!
-! Uses formulation of ...
-!    Pleim et al. (2013) JGR, 118, 3794-3806.
-!
-! With data from ...
-!    Rawls et al. (1982) Trans. ASAE, 25, 1316-1320.
-!    Clapp and Hornberger (1978) Water Resources Res., 14, 601-604.
-!
-!**********************************************************************************************************************!
-function rsoill(mdiffl, stheta, sattheta, rtheta, sbcoef, dsoil)
-  real(kind=dp)             :: rsoill     ! resistance to diffusion 
-                                          ! through the soil (s/cm)
-  real(kind=dp), intent(in) :: mdiffl     ! molecular diffusivity of species in air (cm2/s)
-  real(kind=dp), intent(in) :: stheta     ! volumetric soil water content (m3/m3) 
-  real(kind=dp), intent(in) :: sattheta   ! saturation volumetric soil water content (m3/m3)
-  real(kind=dp), intent(in) :: rtheta     ! residual volumetric soil water content (m3/m3)
-  real(kind=dp), intent(in) :: sbcoef     ! Clapp and Hornberger exponent
-  real(kind=dp), intent(in) :: dsoil      ! depth of topsoil (cm)
-  real(kind=dp)             :: ldry
-  real(kind=dp)             :: mdiffp
-  real(kind=dp)             :: xe
-
-  xe =(1.0-(stheta/sattheta))**5.0
-  ldry = dsoil*(dexp(xe)-1.0)/1.7183
-  mdiffp = mdiffl*sattheta*sattheta*(1.0-(rtheta/sattheta))**(2.0+3.0/sbcoef)
-  rsoill = ldry/mdiffp
-  return
-end function rsoill
 
 !**********************************************************************************************************************!
 ! function rbl - calculate leaf boundary resistance for trace species

@@ -486,7 +486,7 @@ subroutine PrintFinaltoFile()
   hdr = ' hr         rbg(s/cm)'
   write(UOUT,1000) trim(hdr)
   do m=0,ntout
-    write(UOUT,1001) timeout(m), rbgout(1,m)
+    write(UOUT,1001) timeout(m), rbgout(m)
   end do
   close(UOUT) 
 
@@ -500,13 +500,13 @@ subroutine PrintFinaltoFile()
   end do
   close(UOUT) 
 
-  ! output soil resistances over simulation
+  ! output soil resistances of chemical species over simulation
   ofname='./out/' // trim(simname) // '/r/rsoil.dat'
   open(UOUT,file=ofname)
   hdr = ' hr         rsoil(s/cm)'
   write(UOUT,1000) trim(hdr)
   do m=0,ntout
-    write(UOUT,1001) timeout(m), rsoilout(1,m)
+    write(UOUT,1001) timeout(m), rsoillout(1,m)
   end do
   close(UOUT) 
 
@@ -942,7 +942,7 @@ subroutine PrintFinaltoFile()
   end do
   close(UOUT)
 
-  ! output rsoil over simulation
+  ! output rsoil of water vapor over simulation
   ofname='./out/' // trim(simname) // '/soil/rsoil.dat'
   open(UOUT,file=ofname)
   hdr = ' hr         rsoil(s/cm)'
