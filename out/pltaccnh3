@@ -941,6 +941,168 @@ class PltMet(wx.Panel):
     def OnClickExit(self,event):
         frame.Destroy()
 
+# class definition for soil plots
+class PltSoil(wx.Panel):
+
+    def __init__(self, parent):
+        wx.Panel.__init__(self, parent)
+
+        font = wx.Font(16, wx.DEFAULT, wx.NORMAL, wx.BOLD, False, "LucidaGrande")
+
+        vbox = wx.BoxSizer(wx.VERTICAL)
+
+        # title text
+        hbox0 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltitle = wx.StaticText(self, label="Soil Exchange")
+        lbltitle.SetFont(font)
+        hbox0.Add(lbltitle,flag=wx.ALIGN_LEFT|wx.ALIGN_CENTER)
+        vbox.Add(hbox0,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        vbox.Add((-1,10))
+
+        font.SetPointSize(14)
+
+        # sim value
+        hbox1 = wx.BoxSizer(wx.VERTICAL)
+        lblsim = wx.StaticText(self, size=(100,20), label="Simulation")
+        lblsim.SetFont(font)
+        hbox1.Add(lblsim,flag=wx.ALIGN_LEFT)
+        self.simList = listdirs(os.getcwd())
+        obsindex = self.simList.index("obs")
+        del self.simList[obsindex]
+        imgindex = self.simList.index("img")
+        del self.simList[imgindex]
+        self.chxsim = wx.Choice(self, -1, choices=self.simList)
+        hbox1.Add(self.chxsim, proportion=1)
+        vbox.Add(hbox1,flag=wx.LEFT|wx.RIGHT|wx.TOP, border=10)
+
+        vbox.Add((-1,20))
+
+        # enter soil variable to plot
+        hbox2 = wx.BoxSizer(wx.HORIZONTAL)
+        lbltype = wx.StaticText(self, size=(100,20), label="Variable")
+        lbltype.SetFont(font)
+        hbox2.Add(lbltype,flag=wx.ALIGN_LEFT)
+        vbox.Add(hbox2,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+
+        hbox3 = wx.BoxSizer(wx.VERTICAL)
+        self.rbxtype1 = wx.RadioButton(self, -1, 'vsh2o', style=wx.RB_GROUP)
+        self.rbxtype2 = wx.RadioButton(self, -1, 'qsoil')
+        self.rbxtype3 = wx.RadioButton(self, -1, 'effrh')
+        self.rbxtype4 = wx.RadioButton(self, -1, 'rbg')
+        self.rbxtype5 = wx.RadioButton(self, -1, 'rsoil')
+        self.rbxtype6 = wx.RadioButton(self, -1, 'gbg')
+        self.rbxtype7 = wx.RadioButton(self, -1, 'temps')
+        hbox3.Add(self.rbxtype1, proportion=1)
+        hbox3.Add(self.rbxtype2, proportion=1)
+        hbox3.Add(self.rbxtype3, proportion=1)
+        hbox3.Add(self.rbxtype4, proportion=1)
+        hbox3.Add(self.rbxtype5, proportion=1)
+        hbox3.Add(self.rbxtype6, proportion=1)
+        hbox3.Add(self.rbxtype7, proportion=1)
+        vbox.Add(hbox3,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxtype1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        # enter output type value
+        hbox6 = wx.BoxSizer(wx.VERTICAL)
+        lblout = wx.StaticText(self, size=(100,20), label="Output")
+        lblout.SetFont(font)
+        hbox6.Add(lblout,flag=wx.ALIGN_LEFT)
+        self.rbxout1 = wx.RadioButton(self, -1, 'x11', style=wx.RB_GROUP)
+        self.rbxout2 = wx.RadioButton(self, -1, 'pdf')
+        self.rbxout3 = wx.RadioButton(self, -1, 'png')
+        hbox6.Add(self.rbxout1, proportion=1)
+        hbox6.Add(self.rbxout2, proportion=1)
+        hbox6.Add(self.rbxout3, proportion=1)
+        vbox.Add(hbox6,flag=wx.EXPAND|wx.LEFT|wx.RIGHT, border=10)
+        self.rbxout1.SetValue(True)
+
+        vbox.Add((-1,20))
+
+        hbox = wx.BoxSizer(wx.HORIZONTAL)
+
+        # Plot button
+        pltButton = wx.Button(self, label="Plot", size=(70,30))
+        hbox.Add(pltButton)
+        self.Bind(wx.EVT_BUTTON, self.OnClickPlot, pltButton)
+      
+        # Exit button
+        exitButton = wx.Button(self, label="Exit", size=(70,30))
+        hbox.Add(exitButton,flag=wx.LEFT|wx.BOTTOM, border=5)
+        self.Bind(wx.EVT_BUTTON, self.OnClickExit, exitButton)
+
+        vbox.Add(hbox, flag=wx.ALIGN_LEFT|wx.LEFT, border=10)
+
+        self.SetSizer(vbox)
+
+    def OnClickPlot(self,event):
+        simname = self.chxsim.GetStringSelection()
+        if (self.rbxout1.GetValue() == True):
+           outtype = 'x11'
+        elif (self.rbxout2.GetValue() == True):
+           outtype = 'pdf'
+        elif (self.rxbout3.GetValue() == True):
+           outtype = 'png'
+
+        hmax, hc = getGridInfo(simname)
+
+        inthr=6
+        if (self.rbxtype1.GetValue() == True):
+           varnames = ["vsh2o"]
+           varlabels = [""]
+           scolors = ["peru"]
+           outfn = "vsh2o"
+           tseries.plottsm(simname, "soil", varnames, varlabels, "cm s$^{-1}$", 
+               "Soil Exchange Coefficient - H2O", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype2.GetValue() == True):
+           varnames = ["qsoil"]
+           varlabels = [""]
+           scolors = ["peru"]
+           outfn = "qsoil"
+           tseries.plottsm(simname, "soil", varnames, varlabels, "mol cm$^{-3}$", 
+               "Effective Soil Humidity", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype3.GetValue() == True):
+           varnames = ["effrhsoil"]
+           varlabels = [""]
+           scolors = ["peru"]
+           outfn = "effrhsoil"
+           tseries.plottsm(simname, "soil", varnames, varlabels, "", 
+               "Effective Soil Fractional RH", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype4.GetValue() == True):
+           varnames = ["rbg"]
+           varlabels = [""]
+           scolors = ["peru"]
+           outfn = "rbg"
+           tseries.plottsm(simname, "soil", varnames, varlabels, "s cm$^{-1}$", 
+               "Ground Boundary Layer Resistance", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype5.GetValue() == True):
+           varnames = ["rsoil"]
+           varlabels = [""]
+           scolors = ["peru"]
+           outfn = "rsoil"
+           tseries.plottsm(simname, "soil", varnames, varlabels, "s cm$^{-1}$", 
+               "Soil Resistance", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype6.GetValue() == True):
+           varnames = ["gbg"]
+           varlabels = [""]
+           scolors = ["peru"]
+           outfn = "gbg"
+           tseries.plottsm(simname, "soil", varnames, varlabels, "mol m$^{-2}$ s$^{-1}$", 
+               "Ground Aerodynamic Conductance", "marker", scolors, outtype, outfn)
+        elif (self.rbxtype7.GetValue() == True):
+           varnames = ["tsoilk", "tk0"]
+           varlabels = ["T$_{soil}$", "T$_0$"]
+           scolors = ["peru", "darkgray"]
+           outfn = "temps"
+           tseries.plottsm(simname, "soil", varnames, varlabels, "K", 
+               "Soil and Air BC Temperatures", "marker", scolors, outtype, outfn)
+
+
+    def OnClickExit(self,event):
+        frame.Destroy()
+
 # main
 if __name__ == "__main__":
     app = wx.App()
@@ -957,6 +1119,7 @@ if __name__ == "__main__":
     nb.AddPage(PltSource(nb), "SrcProfs")
     nb.AddPage(PltVd(nb), "VdProfs")
     nb.AddPage(PltCanopy(nb), "Canopy")
+    nb.AddPage(PltSoil(nb), "Soil")
     nb.AddPage(PltMet(nb), "MetProfs")
 
     frame.Centre()

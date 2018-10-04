@@ -297,9 +297,9 @@ module GlobalData
   ! Soil exchange data
   ! vs - soil exchange coefficients (cm/s)
   real(kind=dp), dimension(ninteg) :: vs
-  ! vsh2o - soil exchange coefficient for water vapor (m/s)
+  ! vsh2o - soil exchange coefficient for water vapor (cm/s)
   real(kind=dp)                    :: vsh2o
-  ! qsoil - surface soil humidity (mol/m3)
+  ! qsoil - effective soil molar humidity (mol/cm3)
   real(kind=dp)                    :: qsoil
   ! ksoil - thermal conductivity of soil (W/m-K)
   real(kind=dp)                    :: ksoil
@@ -309,6 +309,8 @@ module GlobalData
   real(kind=dp)                    :: dtdzsoil
   ! gbg - ground boundary layer conductance (mol/m2-s)
   real(kind=dp)                    :: gbg
+  ! effrhsoil - effective soil fractional relative humidity
+  real(kind=dp)                    :: effrhsoil
 
   ! rbg - ground boundary layer resistance (s/cm)
   real(kind=dp), dimension(ninteg) :: rbg
@@ -333,6 +335,20 @@ module GlobalData
   real(kind=dp)                    :: dsoil
   ! csoil - soil compensation points (molecules/cm3)
   real(kind=dp), dimension(ninteg) :: csoil
+
+  ! saved soil physics data
+  ! vsh2oout - soil exchange coefficient for water vapor (cm/s)
+  real(kind=dp), allocatable     :: vsh2oout(:)
+  ! qsoilout - effective soil molar humidity (mol/cm3)
+  real(kind=dp), allocatable     :: qsoilout(:)
+  ! effrhsoilout - effective soil fractional relative humidity ()
+  real(kind=dp), allocatable     :: effrhsoilout(:)
+  ! rbgout - ground boundary layer resistance (s/cm)
+  real(kind=dp), allocatable     :: rbgout(:)
+  ! gbgout - ground aerodynamic conductance (mol/m2-s)
+  real(kind=dp), allocatable     :: gbgout(:)
+  ! rsoilout - resistance to diffusion through soil pore space (s/cm)
+  real(kind=dp), allocatable     :: rsoilout(:)
 
   ! Soil type data
   ! Soil type strings

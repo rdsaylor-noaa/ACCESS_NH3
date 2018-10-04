@@ -182,6 +182,13 @@ subroutine InitializeModel()
   allocate(anetshdout(npts,0:ntout))
   allocate(anetwgtout(npts,0:ntout))
 
+  allocate(vsh2oout(npts,0:ntout))
+  allocate(qsoilout(npts,0:ntout))
+  allocate(effrhsoilout(npts,0:ntout))
+  allocate(rbgout(npts,0:ntout))
+  allocate(gbgout(npts,0:ntout))
+  allocate(rsoilout(npts,0:ntout))
+
   allocate(timeout(0:ntout))
   allocate(sdtout(0:ntout))
 
@@ -241,6 +248,12 @@ subroutine InitializeModel()
   rsshdout=0.0_dp
   anetsunout=0.0_dp
   anetshdout=0.0_dp
+  vsh2oout=0.0_dp
+  qsoilout=0.0_dp
+  effrhsoilout=0.0_dp
+  rbgout=0.0_dp
+  gbgout=0.0_dp
+  rsoilout=0.0_dp
 
   ! set all physical-chemical data
   call SetPhysChemData()
@@ -452,6 +465,8 @@ subroutine SetSimulationData()
     strmkdir = 'mkdir ./out/' // trim(simname) // '/met'
     call system(strmkdir)
     strmkdir = 'mkdir ./out/' // trim(simname) // '/canopy'
+    call system(strmkdir)
+    strmkdir = 'mkdir ./out/' // trim(simname) // '/soil'
     call system(strmkdir)
   end if
 
