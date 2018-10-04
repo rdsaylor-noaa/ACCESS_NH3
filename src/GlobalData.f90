@@ -301,8 +301,6 @@ module GlobalData
   real(kind=dp)                    :: vsh2o
   ! qsoil - surface soil humidity (mol/m3)
   real(kind=dp)                    :: qsoil
-  ! hsoil - surface soil relative humidity ()
-  real(kind=dp), parameter         :: hsoil=0.998       ! soil relative humidity (Campbell & Norman, 1998)
   ! ksoil - thermal conductivity of soil (W/m-K)
   real(kind=dp)                    :: ksoil
   ! tsoilk - soil/litter temperature (K)
@@ -329,6 +327,8 @@ module GlobalData
   real(kind=dp)                    :: rtheta
   ! sbcoef - Clapp and Hornberger exponent
   real(kind=dp)                    :: sbcoef
+  ! satphi - saturation matric potential (suction) (m)
+  real(kind=dp)                    :: satphi
   ! dsoil - depth of topsoil (cm)
   real(kind=dp)                    :: dsoil
   ! csoil - soil compensation points (molecules/cm3)
@@ -359,6 +359,9 @@ module GlobalData
   ! xsbcoef - Clapp-Hornberger exponents
   real(kind=dp), dimension(11)     :: xsbcoef
   data xsbcoef /4.05,4.38,4.90,5.39,5.30,7.12,8.52,7.75,10.4,10.4,11.4/
+  ! xsatphi - soil matric potential (suction) at saturation (cm)
+  real(kind=dp), dimension(11)     :: xsatphi
+  data xsatphi /12.1,9.0,21.8,78.6,47.8,29.9,35.6,63.0,15.3,49.0,40.5/
 
   ! Soil thermal conductivity data
   ! Estimated from:
