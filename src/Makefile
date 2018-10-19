@@ -1,4 +1,4 @@
-# Makefile created by myfmkmf.pl at 09:46:00 on Jan 5, 2012
+# initial Makefile created by myfmkmf.pl at 09:46:00 on Jan 5, 2012
 #
 # Modification of fmkmf.pl by Rick D. Saylor, NOAA/ARL/ATDD, Nov 2011
 #
