@@ -232,7 +232,7 @@ contains
     real(kind=dp)              :: zcm          ! height in cm
     real(kind=dp)              :: lnz0m, lnz0h, fm, fh
     real(kind=dp)              :: ramol        ! aerodynamic resistance (s/m)
-    real(kind=dp), parameter   :: ramin=0.01   ! minimum Ra (s/m)
+    real(kind=dp), parameter   :: ramin=10.    ! minimum Ra (s/m)
     real(kind=dp), parameter   :: ramax=1000.  ! maximum Ra (s/m)
 
     zcm = 100.0*zm   ! convert to cm since d and z0m, z0h are in cm
