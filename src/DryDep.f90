@@ -116,6 +116,7 @@ end subroutine GetDryDepExCoeffs
 subroutine GetSoilDryDepExCoeffs()
   integer(kind=i4)          :: l
   real(kind=dp)             :: mdiffl         ! molecular diffusivity (cm2/s)
+  real(kind=dp)             :: rlitter        ! resistance to diffusion through plant litter on top of soil (s/cm)
 
   ! soil exchange coeffs and soil compensation points
   do l=1,ninteg
@@ -128,7 +129,9 @@ subroutine GetSoilDryDepExCoeffs()
     rsoill(l) = SoilResist(mdiffl)
 
     ! deposition velocity to ground surface (cm/s)
-    vs(l)=1.0/(rbg+rsoill(l))       
+    !    test assuming NH3 emanates from plant litter, not soil
+    rlitter = sensrlttr*40.0
+    vs(l)=1.0/(rbg+rlitter)    
 
     ! soil compensation point (molecules/cm3)
     csoil(l) = 161500.0_dp*dexp(-10380.0_dp/tsoilk)*gammaso(l)*navo/(tsoilk*1000.0_dp) 

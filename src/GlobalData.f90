@@ -891,6 +891,12 @@ module GlobalData
   integer(kind=i4), parameter :: KVSTULL=2     ! Stull-based
   integer(kind=i4), parameter :: KVULKE=3      ! Ulke-based
 
+  ! Sensitivity simulation factors
+  ! Kv profile sensitivity
+  real(kind=dp)            :: senskv
+  ! Rlitter sensitivity
+  real(kind=dp)            :: sensrlttr
+
   ! Avogadro's number
   real(kind=dp), parameter :: navo=6.02D+023
 

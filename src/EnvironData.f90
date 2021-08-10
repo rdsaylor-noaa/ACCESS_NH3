@@ -150,12 +150,12 @@ contains
        select case(KVSELECT)
          case(KVRA)
            ! Kv based on Ra
-           kv(n)        = CalcEddyDiffRa(z(n), ubzref, ubar(n), ra(nt))
+           kv(n)        = senskv*CalcEddyDiffRa(z(n), ubzref, ubar(n), ra(nt))
          case(KVSTULL)
            ! Kv from Stull (1998)
-           kv(n)        = CalcEddyDiffStull(z(n), ubar(n), zol)
+           kv(n)        = senskv*CalcEddyDiffStull(z(n), ubar(n), zol)
          case default
-           kv(n)        = CalcEddyDiffRa(z(n), ubzref, ubar(n), ra(nt))
+           kv(n)        = senskv*CalcEddyDiffRa(z(n), ubzref, ubar(n), ra(nt))
        end select
 
        ! Calculate air density based on pmb and tk

@@ -376,6 +376,10 @@ subroutine SetSimulationData()
   read(UCTRL,*) INTGWVAP
   read(UCTRL,*) INTGTAIR
   read(UCTRL,*)
+  read(UCTRL,*) senskv
+  read(UCTRL,*)
+  read(UCTRL,*) sensrlttr
+  read(UCTRL,*)
   read(UCTRL,*) grdfile
   read(UCTRL,*)
   read(UCTRL,*) envfile
@@ -425,6 +429,9 @@ subroutine SetSimulationData()
   write(6,2171) METINTERP
   write(6,2172) INTGWVAP
   write(6,2173) INTGTAIR
+  write(6,2205)
+  write(6,2206) senskv
+  write(6,2207) sensrlttr
   write(6,2210) 
   write(6,2179) grdfile
   write(6,2190) envfile
@@ -516,6 +523,9 @@ subroutine SetSimulationData()
   write(USUMM,2171) METINTERP
   write(USUMM,2172) INTGWVAP
   write(USUMM,2173) INTGTAIR
+  write(USUMM,2205)
+  write(USUMM,2206) senskv
+  write(USUMM,2207) sensrlttr
   write(USUMM,2210) 
   write(USUMM,2179) grdfile
   write(USUMM,2190) envfile
@@ -557,6 +567,9 @@ subroutine SetSimulationData()
 2180 format(' IC file name   = ', a)
 2190 format(' MET file name  = ', a)
 2200 format(/' Model Options:')
+2205 format(/' Sensitivity Factors:')
+2206 format(' Kv factor      = ', f7.2)
+2207 format(' Rlitter factor = ', f7.2)
 2210 format(/' Input Files:')
 2300 format(' CNPY file name  = ', a)
 2301 format(' EMISS file name = ', a)
